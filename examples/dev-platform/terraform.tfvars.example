@@ -1,0 +1,69 @@
+# Copy to terraform.tfvars and adjust. terraform.tfvars is git-ignored.
+
+project_id  = "my-dev-project" # an existing project with billing enabled
+region      = "us-central1"
+name        = "platform"
+environment = "dev"
+team        = "platform"
+cost_center = "cc-0000"
+
+# Who may reach the public control plane endpoint. 203.0.113.0/24 is a
+# documentation range (RFC 5737); replace it with your office or VPN egress.
+master_authorized_networks = [
+  {
+    cidr_block   = "203.0.113.0/24"
+    display_name = "office-vpn"
+  },
+]
+
+# Network layout. Must not overlap anything you peer or VPN into this VPC.
+subnet_cidr            = "10.10.0.0/20"
+pods_cidr              = "10.16.0.0/14"
+services_cidr          = "10.20.0.0/20"
+master_ipv4_cidr_block = "172.16.0.0/28"
+
+# Set to 1+ if a third party needs to allowlist your egress IPs.
+nat_ip_count = 0
+
+release_channel = "REGULAR"
+
+# If container logs go to an in-cluster stack (EFK, Loki), stop paying for
+# them in Cloud Logging as well:
+# logging_components = ["SYSTEM_COMPONENTS"]
+
+node_pools = {
+  general = {
+    machine_type = "e2-standard-4"
+    min_count    = 1 # per zone: 3 nodes minimum in a 3-zone region
+    max_count    = 3
+  }
+
+  spot-batch = {
+    machine_type = "n2d-standard-4"
+    spot         = true
+    min_count    = 0 # scales to zero when no batch work is queued
+    max_count    = 5
+    labels       = { workload-type = "batch" }
+    taints = [
+      { key = "cloud.google.com/gke-spot", value = "true", effect = "NO_SCHEDULE" },
+    ]
+  }
+}
+
+workload_identities = {
+  # GSA: platform-dev-extdns@<project>.iam.gserviceaccount.com
+  extdns = {
+    namespace                  = "external-dns"
+    kubernetes_service_account = "external-dns"
+    project_roles              = ["roles/dns.admin"]
+  }
+
+  orders-api = {
+    namespace                  = "orders"
+    kubernetes_service_account = "orders-api"
+    project_roles              = ["roles/cloudsql.client"]
+  }
+}
+
+# Dev only. Keep true for anything you would mind losing.
+deletion_protection = false

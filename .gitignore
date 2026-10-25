@@ -1,0 +1,41 @@
+# Local working directories
+.terraform/
+.terragrunt-cache/
+
+# State. Never commit state: it can contain secrets.
+*.tfstate
+*.tfstate.*
+.terraform.tfstate.lock.info
+
+# Variable files usually hold project IDs, IP ranges and the like.
+# terraform.tfvars.example does not match these patterns and stays tracked.
+*.tfvars
+*.tfvars.json
+
+# Plans
+*.tfplan
+tfplan
+
+# Crash logs
+crash.log
+crash.*.log
+
+# Override files are meant for local tweaks
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# CLI configuration
+.terraformrc
+terraform.rc
+
+# Provider lock files. These are reusable modules plus an example; a real root
+# configuration built from them should commit its own lock file.
+.terraform.lock.hcl
+
+# Editors and OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
